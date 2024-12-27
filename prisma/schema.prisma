@@ -1,0 +1,210 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              Int                @id @default(autoincrement())
+  email           String             @unique
+  password        String?
+  firstName       String?
+  lastName        String?
+  role            Role               @default(USER)
+  provider        Provider? // OAuth provider
+  providerId      String? // OAuth provider ID
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  refreshTokens   RefreshToken[]
+  enrolledCourses CourseEnrollment[]
+  enrolledLessons LessonEnrollment[]
+  quizScores      QuizScore[]
+  notes           Note[]
+
+  @@map("users")
+}
+
+model Course {
+  id              Int                @id @default(autoincrement())
+  title           String
+  slug            String             @unique
+  description     String?
+  publishStatus   PublishStatus
+  order           Int
+  lessons         Lesson[]
+  thumbnail       String?  // Thumbnail url 
+  enrolledCourses CourseEnrollment[]
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  seo             Seo?               @relation(fields: [seoId], references: [id])
+  seoId           Int?
+
+  @@map("courses")
+}
+
+model Lesson {
+  id              Int                @id @default(autoincrement())
+  title           String
+  slug            String             @unique
+  description     String?
+  publishStatus   PublishStatus
+  thumbnail       String? // Thumbnail url
+  content         String
+  courseId        Int
+  course          Course             @relation(fields: [courseId], references: [id])
+  order           Int
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  enrolledLessons LessonEnrollment[]
+  quizzes         Quiz[]
+  notes           Note[]
+  seoId           Int?
+  seo             Seo?               @relation(fields: [seoId], references: [id])
+
+  @@map("lessons")
+}
+
+model Article {
+  id             String        @id @default(uuid())
+  title          String
+  slug           String        @unique
+  description    String?
+  publishStatus  PublishStatus
+  thumbnail      String? // Thumbnail url
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  displayOrder   Int
+  thumbnailImage String?
+  seo            Seo?          @relation(fields: [seoId], references: [id])
+  seoId          Int?
+  content        String
+
+  @@map("articles")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@map("refresh_tokens")
+}
+
+model CourseEnrollment {
+  id          Int       @id @default(autoincrement())
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  completedAt DateTime?
+  userId      Int
+  courseId    Int
+  user        User      @relation(fields: [userId], references: [id])
+  course      Course    @relation(fields: [courseId], references: [id])
+
+  @@map("enrolled_courses")
+}
+
+model LessonEnrollment {
+  id            Int       @id @default(autoincrement())
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  completedAt   DateTime?
+  videoProgress Float?    @default(0) // Precentage of video watched
+  quizDone      Boolean
+  userId        Int
+  lessonId      Int
+  user          User      @relation(fields: [userId], references: [id])
+  lesson        Lesson    @relation(fields: [lessonId], references: [id])
+
+  @@map("enrolled_lessons")
+}
+
+model InvalidToken {
+  token String @id
+
+  @@map("invalid_tokens")
+}
+
+model Note {
+  id       Int    @id @default(autoincrement())
+  content  String
+  second   Float
+  userId   Int
+  lessonId Int
+  user     User   @relation(fields: [userId], references: [id])
+  lesson   Lesson @relation(fields: [lessonId], references: [id])
+
+  @@map("notes")
+}
+
+model Quiz {
+  id        Int         @id @default(autoincrement())
+  content   String
+  type      QuizType
+  lessonId  Int
+  lesson    Lesson      @relation(fields: [lessonId], references: [id])
+  QuizScore QuizScore[]
+
+  @@map("quizzes")
+}
+
+model QuizScore {
+  id                Int    @id @default(autoincrement())
+  score             Int
+  answeredQuestions String
+  quizId            Int
+  userId            Int
+  quiz              Quiz   @relation(fields: [quizId], references: [id])
+  user              User   @relation(fields: [userId], references: [id])
+
+  @@map("quiz_scores")
+}
+
+model Seo {
+  id          Int       @id @default(autoincrement())
+  title       String
+  description String
+  ldJson      String
+  Article     Article[]
+  Course      Course[]
+  Lesson      Lesson[]
+
+  @@map("seo")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum Provider {
+  GOOGLE
+  GITHUB
+  LOCAL
+}
+
+enum PublishStatus {
+  DRAFT
+  PUBLISHED
+}
+
+enum QuizType {
+  MULTIPLE_CHOICE
+  TRUE_FALSE
+}
+
+enum UserRole {
+  ADMIN
+  USER
+}
