@@ -3,25 +3,38 @@ import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { Provider } from '@prisma/client';
+import { User } from 'src/users/models/user.model';
+
+interface OAuthProfile {
+  provider: string;
+  id: string;
+  emails: { value: string }[];
+}
 
 @Injectable()
 export class AuthService {
   constructor(
-    private prisma: PrismaService,
-    private jwtService: JwtService,
-  ) { }
+    private readonly prisma: PrismaService,
+    private readonly jwtService: JwtService,
+  ) {}
 
-  async validateUser(email: string, password: string): Promise<any> {
-    const user = await this.prisma.user.findUnique({ where: { email } });
+  async validateUser(
+    email: string,
+    password: string,
+  ): Promise<Omit<User, 'password'> | null> {
+    const user = await this.prisma.user.findUnique({
+      where: { email },
+      include: { role: true },
+    });
     if (user && (await bcrypt.compare(password, user.password))) {
-      const { password, ...result } = user;
+      const { ...result } = user;
       return result;
     }
     return null;
   }
 
-  async login(user: any) {
-    const payload = { email: user.email, sub: user.id, role: user.role };
+  async login(user: User) {
+    const payload = { email: user.email, sub: user.id, role: user.roleId };
     const accessToken = this.jwtService.sign(payload);
 
     const refreshToken = await this.createRefreshToken(user.id);
@@ -29,15 +42,11 @@ export class AuthService {
     return {
       accessToken,
       refreshToken: refreshToken.token,
-      user: {
-        id: user.id,
-        email: user.email,
-        role: user.role,
-      },
+      user,
     };
   }
 
-  async validateOAuthUser(profile: any): Promise<any> {
+  async validateOAuthUser(profile: OAuthProfile): Promise<User> {
     const { provider, id: providerId, emails } = profile;
 
     const email = emails[0].value;
@@ -53,6 +62,7 @@ export class AuthService {
           },
         ],
       },
+      include: { role: true },
     });
 
     if (!user) {
@@ -68,20 +78,21 @@ export class AuthService {
             },
           },
         },
+        include: { role: true },
       });
     }
 
     return user;
   }
 
-  private async createRefreshToken(userId: string) {
+  private async createRefreshToken(userId: number) {
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 7); // 7 days from now
 
     return this.prisma.refreshToken.create({
       data: {
         token: this.jwtService.sign({ sub: userId }, { expiresIn: '7d' }),
-        userId: parseInt(userId),
+        userId,
         expiresAt,
       },
     });

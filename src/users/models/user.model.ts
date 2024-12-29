@@ -1,5 +1,6 @@
 import { ObjectType, Field, ID, registerEnumType } from '@nestjs/graphql';
 import { Provider } from '@prisma/client';
+import { Role } from 'src/role/dto/role.model';
 
 registerEnumType(Provider, {
   name: 'Provider',
@@ -11,12 +12,12 @@ export class User {
   id: number;
   email: string;
   username: string;
-  password?: string;
-  firstName?: string;
-  lastName?: string;
   @Field(() => Provider, { nullable: true })
   provider?: Provider;
   providerId?: string;
   emailVerifiedAt?: Date;
   roleId: number;
+  createdAt: Date;
+  updatedAt: Date;
+  role: Role;
 }

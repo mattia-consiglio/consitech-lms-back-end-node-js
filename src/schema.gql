@@ -68,6 +68,11 @@ input RefreshTokenInput {
   token: String!
 }
 
+type Role {
+  id: ID!
+  name: String!
+}
+
 input UpdateUserInput {
   email: String
   password: String
@@ -76,14 +81,14 @@ input UpdateUserInput {
 }
 
 type User {
+  createdAt: DateTime!
   email: String!
   emailVerifiedAt: DateTime
-  firstName: String
   id: ID!
-  lastName: String
-  password: String
   provider: Provider
   providerId: String
+  role: Role!
   roleId: Float!
+  updatedAt: DateTime!
   username: String!
 }

@@ -1,5 +1,4 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-// biome-ignore lint/style/useImportType: <explanation>
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserInput } from './dto/create-user.input';
 import { UpdateUserInput } from './dto/update-user.input';
@@ -20,7 +19,10 @@ export class UsersResolver {
 
   @Query(() => User)
   async user(@Args('id') id: number): Promise<User> {
-    return this.prisma.user.findUnique({ where: { id } });
+    return this.prisma.user.findUnique({
+      where: { id },
+      include: { role: true },
+    });
   }
 
   @Mutation(() => User)
@@ -57,6 +59,7 @@ export class UsersResolver {
         username: createUserInput.username || createUserInput.email,
         role: { connect: { name: createUserInput.roleName || 'Student' } },
       },
+      include: { role: true },
     });
   }
 
@@ -75,11 +78,15 @@ export class UsersResolver {
     return this.prisma.user.update({
       where: { id },
       data,
+      include: { role: true },
     });
   }
 
   @Mutation(() => User)
   async deleteUser(@Args('id') id: number): Promise<User> {
-    return this.prisma.user.delete({ where: { id } });
+    return this.prisma.user.delete({
+      where: { id },
+      include: { role: true },
+    });
   }
 }
