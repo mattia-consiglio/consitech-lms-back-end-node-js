@@ -6,6 +6,10 @@ import * as bcrypt from 'bcrypt';
 import * as dotenv from 'dotenv';
 import { CurrentUser } from './current-user.decorator';
 import { User } from './models/user.model';
+import { Roles } from 'src/auth/decorators/roles.decorator';
+import { UseGuards } from '@nestjs/common';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
 dotenv.config();
 
 @Resolver(() => User)
@@ -13,8 +17,12 @@ export class UsersResolver {
   constructor(private readonly prisma: PrismaService) {}
 
   @Query(() => [User])
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('Admin')
   async users(): Promise<Partial<User>[]> {
-    return this.prisma.user.findMany();
+    return this.prisma.user.findMany({
+      include: { role: true },
+    });
   }
 
   @Query(() => User)
