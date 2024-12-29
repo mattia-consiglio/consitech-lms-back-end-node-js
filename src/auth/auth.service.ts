@@ -9,7 +9,7 @@ export class AuthService {
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
-  ) {}
+  ) { }
 
   async validateUser(email: string, password: string): Promise<any> {
     const user = await this.prisma.user.findUnique({ where: { email } });
@@ -23,7 +23,7 @@ export class AuthService {
   async login(user: any) {
     const payload = { email: user.email, sub: user.id, role: user.role };
     const accessToken = this.jwtService.sign(payload);
-    
+
     const refreshToken = await this.createRefreshToken(user.id);
 
     return {
@@ -39,29 +39,34 @@ export class AuthService {
 
   async validateOAuthUser(profile: any): Promise<any> {
     const { provider, id: providerId, emails } = profile;
-    
+
     const email = emails[0].value;
     let user = await this.prisma.user.findFirst({
       where: {
         OR: [
           { email },
-          { 
+          {
             AND: [
               { providerId },
-              { provider: provider.toUpperCase() as Provider }
-            ]
-          }
-        ]
-      }
+              { provider: provider.toUpperCase() as Provider },
+            ],
+          },
+        ],
+      },
     });
 
     if (!user) {
       user = await this.prisma.user.create({
         data: {
           email,
+          username: email,
           provider: provider.toUpperCase() as Provider,
           providerId,
-          role: 'USER',
+          role: {
+            connect: {
+              name: 'Student',
+            },
+          },
         },
       });
     }
@@ -76,7 +81,7 @@ export class AuthService {
     return this.prisma.refreshToken.create({
       data: {
         token: this.jwtService.sign({ sub: userId }, { expiresIn: '7d' }),
-        userId,
+        userId: parseInt(userId),
         expiresAt,
       },
     });
@@ -95,7 +100,7 @@ export class AuthService {
     const newAccessToken = this.jwtService.sign({
       email: refreshToken.user.email,
       sub: refreshToken.user.id,
-      role: refreshToken.user.role,
+      role: refreshToken.user.roleId,
     });
 
     return {

@@ -16,12 +16,11 @@ datasource db {
 model User {
   id              Int                @id @default(autoincrement())
   email           String             @unique
+  username        String             @unique
   password        String?
-  firstName       String?
-  lastName        String?
-  role            Role               @default(USER)
   provider        Provider? // OAuth provider
   providerId      String? // OAuth provider ID
+  emailVerifiedAt DateTime?
   createdAt       DateTime           @default(now())
   updatedAt       DateTime           @updatedAt
   refreshTokens   RefreshToken[]
@@ -29,6 +28,12 @@ model User {
   enrolledLessons LessonEnrollment[]
   quizScores      QuizScore[]
   notes           Note[]
+  role            Role               @relation(fields: [roleId], references: [id])
+  roleId          Int
+  capabilities    Capability[]       @relation("UserCapabilities")
+  courses         Course[]
+  lessons         Lesson[]
+  articles        Article[]
 
   @@map("users")
 }
@@ -41,12 +46,14 @@ model Course {
   publishStatus   PublishStatus
   order           Int
   lessons         Lesson[]
-  thumbnail       String?  // Thumbnail url 
+  thumbnail       String? // Thumbnail url 
   enrolledCourses CourseEnrollment[]
   createdAt       DateTime           @default(now())
   updatedAt       DateTime           @updatedAt
-  seo             Seo?               @relation(fields: [seoId], references: [id])
+  seo             Seo?               @relation(fields: [seoId], references: [id], onDelete: Cascade)
   seoId           Int?
+  teacher         User               @relation(fields: [teacherId], references: [id])
+  teacherId       Int
 
   @@map("courses")
 }
@@ -64,11 +71,13 @@ model Lesson {
   order           Int
   createdAt       DateTime           @default(now())
   updatedAt       DateTime           @updatedAt
+  teacher         User               @relation(fields: [teacherId], references: [id])
+  teacherId       Int
   enrolledLessons LessonEnrollment[]
   quizzes         Quiz[]
   notes           Note[]
   seoId           Int?
-  seo             Seo?               @relation(fields: [seoId], references: [id])
+  seo             Seo?               @relation(fields: [seoId], references: [id], onDelete: Cascade)
 
   @@map("lessons")
 }
@@ -84,7 +93,9 @@ model Article {
   updatedAt      DateTime      @updatedAt
   displayOrder   Int
   thumbnailImage String?
-  seo            Seo?          @relation(fields: [seoId], references: [id])
+  author         User          @relation(fields: [authorId], references: [id])
+  authorId       Int
+  seo            Seo?          @relation(fields: [seoId], references: [id], onDelete: Cascade)
   seoId          Int?
   content        String
 
@@ -183,9 +194,22 @@ model Seo {
   @@map("seo")
 }
 
-enum Role {
-  USER
-  ADMIN
+model Role {
+  id           Int          @id @default(autoincrement())
+  name         String       @unique
+  capabilities Capability[] @relation("RoleCapabilities")
+  users        User[]
+
+  @@map("roles")
+}
+
+model Capability {
+  id    Int    @id @default(autoincrement())
+  name  String @unique
+  roles Role[] @relation("RoleCapabilities")
+  users User[] @relation("UserCapabilities")
+
+  @@map("capabilities")
 }
 
 enum Provider {

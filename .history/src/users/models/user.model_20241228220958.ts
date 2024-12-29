@@ -14,7 +14,6 @@ export class User {
   password?: string;
   firstName?: string;
   lastName?: string;
-  @Field(() => Provider, { nullable: true })
   provider?: Provider;
   providerId?: string;
   emailVerifiedAt?: Date;

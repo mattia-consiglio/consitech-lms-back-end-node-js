@@ -1,0 +1,25 @@
+{
+	"files": {
+		"ignore": [
+			"node_modules/**/*",
+			"dist/**/*"
+		]
+	},
+	"javascript": {
+		"parser": {
+			"unsafeParameterDecoratorsEnabled": true
+		},
+		"formatter": {
+			"quoteStyle": "single",
+			"trailingCommas": "all"
+		}
+	},
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"style": {
+				"useImportType": "off"
+			}
+		}
+	}
+}
