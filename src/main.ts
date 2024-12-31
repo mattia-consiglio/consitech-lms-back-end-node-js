@@ -4,6 +4,8 @@ import * as net from 'node:net';
 import * as dotenv from 'dotenv';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import { ValidationPipe } from '@nestjs/common';
+import { GraphQLErrorFilter } from './common/filters/graphql-error.filter';
 
 // Carica le variabili d'ambiente all'avvio
 dotenv.config();
@@ -78,6 +80,17 @@ async function findAvailablePort(startPort: number): Promise<number> {
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true,
+      whitelist: true,
+      forbidNonWhitelisted: true,
+    }),
+  );
+
+  app.useGlobalFilters(new GraphQLErrorFilter());
+
   const port = await findAvailablePort(3000);
   console.log(`Server starting on port ${port}`);
   await app.listen(port);

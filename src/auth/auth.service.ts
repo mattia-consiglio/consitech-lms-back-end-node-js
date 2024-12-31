@@ -19,12 +19,14 @@ export class AuthService {
   ) {}
 
   async validateUser(
-    email: string,
+    emailOrUsername: string,
     password: string,
   ): Promise<Omit<User, 'password'> | null> {
-    const user = await this.prisma.user.findUnique({
-      where: { email },
-      include: { role: true },
+    const user = await this.prisma.user.findFirst({
+      where: {
+        OR: [{ email: emailOrUsername }, { username: emailOrUsername }],
+      },
+      include: { role: { include: { capabilities: true } } },
     });
     if (user && (await bcrypt.compare(password, user.password))) {
       const { ...result } = user;
@@ -62,7 +64,7 @@ export class AuthService {
           },
         ],
       },
-      include: { role: true },
+      include: { role: { include: { capabilities: true } } },
     });
 
     if (!user) {
@@ -78,7 +80,7 @@ export class AuthService {
             },
           },
         },
-        include: { role: true },
+        include: { role: { include: { capabilities: true } } },
       });
     }
 

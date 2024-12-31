@@ -8,7 +8,7 @@ import {
 } from 'class-validator';
 
 @InputType()
-export class CreateUserInput {
+export class CreateUserInputPublic {
   @Field(() => String, { description: 'User email address' })
   @IsEmail({}, { message: 'Please provide a valid email address' })
   email: string;
@@ -26,12 +26,4 @@ export class CreateUserInput {
   @IsString()
   @MinLength(3, { message: 'Username must be at least 3 characters long' })
   username?: string;
-
-  @Field(() => String, {
-    nullable: true,
-    description: 'Role name (defaults to Student)',
-  })
-  @IsString()
-  @IsOptional()
-  roleName?: string;
 }

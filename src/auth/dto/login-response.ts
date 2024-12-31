@@ -3,10 +3,10 @@ import { User } from '../../users/models/user.model';
 
 @ObjectType()
 export class LoginResponse {
-  @Field()
+  @Field(() => String)
   accessToken: string;
 
-  @Field()
+  @Field(() => String)
   refreshToken: string;
 
   @Field(() => User)

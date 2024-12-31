@@ -1,3 +1,4 @@
+import { UnauthorizedException } from '@nestjs/common';
 import { Resolver, Mutation, Args } from '@nestjs/graphql';
 import { AuthService } from './auth.service';
 import { LoginResponse } from './dto/login-response';
@@ -17,16 +18,28 @@ export class AuthResolver {
    * @returns LoginResponse containing the access token and user info
    * @throws Error if credentials are invalid
    */
-  @Mutation(() => LoginResponse)
-  async login(@Args('loginInput') loginInput: LoginInput) {
-    const user = await this.authService.validateUser(
-      loginInput.email,
-      loginInput.password,
-    );
-    if (!user) {
-      throw new Error('Invalid credentials');
+  @Mutation(() => LoginResponse, {
+    description: 'Authenticate user and return access token',
+  })
+  async login(
+    @Args('loginInput') loginInput: LoginInput,
+  ): Promise<LoginResponse> {
+    try {
+      const user = await this.authService.validateUser(
+        loginInput.emailOrUsername,
+        loginInput.password,
+      );
+
+      if (!user) {
+        throw new UnauthorizedException('Invalid credentials');
+      }
+
+      return this.authService.login(user);
+    } catch (error) {
+      throw new UnauthorizedException(
+        error instanceof Error ? error.message : 'Invalid credentials',
+      );
     }
-    return this.authService.login(user);
   }
 
   /**

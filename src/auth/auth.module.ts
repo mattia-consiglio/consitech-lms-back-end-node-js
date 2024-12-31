@@ -9,6 +9,7 @@ import { OAuth2Strategy } from './strategies/oauth2.strategy';
 import { PrismaService } from '../prisma/prisma.service';
 import { UsersModule } from '../users/users.module';
 import { RolesGuard } from './guards/roles.guard';
+import { CapabilitiesGuard } from './guards/capabilities.guard';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { RolesGuard } from './guards/roles.guard';
     OAuth2Strategy,
     PrismaService,
     RolesGuard,
+    CapabilitiesGuard,
   ],
   exports: [AuthService, RolesGuard],
 })

@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { GraphQLModule } from '@nestjs/graphql';
-import { ApolloDriver, type ApolloDriverConfig } from '@nestjs/apollo';
+import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
 import { ConfigModule } from '@nestjs/config';
 import { PrismaService } from './prisma/prisma.service';
@@ -20,6 +20,17 @@ import { CoursesModule } from './courses/courses.module';
       sortSchema: true,
       playground: false,
       plugins: [ApolloServerPluginLandingPageLocalDefault()],
+      formatError: (formattedError) => {
+        if (process.env.NODE_ENV === 'production') {
+          return {
+            message: formattedError.message,
+            code: formattedError.extensions?.code || 'INTERNAL_SERVER_ERROR',
+            path: formattedError.path || [],
+          };
+        }
+
+        return formattedError;
+      },
     }),
     AuthModule,
     UsersModule,

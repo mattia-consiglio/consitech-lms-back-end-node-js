@@ -2,6 +2,16 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+type Capability {
+  id: ID!
+  name: String!
+}
+
+type ChangeUserOutput {
+  message: String!
+  user: User
+}
+
 type Course {
   createdAt: DateTime!
   description: String
@@ -17,9 +27,27 @@ type Course {
 }
 
 input CreateUserInput {
+  """User email address"""
   email: String!
+
+  """User password"""
   password: String!
+
+  """Role name (defaults to Student)"""
   roleName: String
+
+  """Username (optional)"""
+  username: String
+}
+
+input CreateUserInputPublic {
+  """User email address"""
+  email: String!
+
+  """User password"""
+  password: String!
+
+  """Username (optional)"""
   username: String
 }
 
@@ -29,7 +57,8 @@ A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date
 scalar DateTime
 
 input LoginInput {
-  email: String!
+  """Email or username"""
+  emailOrUsername: String!
   password: String!
 }
 
@@ -40,11 +69,42 @@ type LoginResponse {
 }
 
 type Mutation {
-  createUser(createUserInput: CreateUserInput!): User!
-  deleteUser(id: Float!): User!
+  """Create a new user account (requires create_users capability)"""
+  createUser(
+    """Input data for creating a new user with specified role"""
+    createUserInput: CreateUserInput!
+  ): User!
+
+  """Delete own user account"""
+  deleteOwnUser: ChangeUserOutput!
+
+  """Delete a user account"""
+  deleteUser(
+    """ID of the user to delete"""
+    id: Float!
+  ): ChangeUserOutput!
+
+  """Authenticate user and return access token"""
   login(loginInput: LoginInput!): LoginResponse!
   refreshToken(input: RefreshTokenInput!): LoginResponse!
-  updateUser(id: Float!, updateUserInput: UpdateUserInput!): User!
+
+  """Register a new user account with Student role"""
+  register(
+    """Input data for creating a new user account"""
+    createUserInput: CreateUserInputPublic!
+  ): User!
+
+  """Update own user account"""
+  updateOwnUser(updateUserInput: UpdateUserInput!): ChangeUserOutput!
+
+  """Update an existing user account"""
+  updateUser(
+    """ID of the user to update"""
+    id: Float!
+
+    """New user data"""
+    updateUserInput: UpdateUserInput!
+  ): ChangeUserOutput!
 }
 
 enum Provider {
@@ -60,6 +120,7 @@ enum PublishStatus {
 
 type Query {
   courses: [Course!]!
+  currentUser: User!
   user(id: Float!): User!
   users: [User!]!
 }
@@ -69,6 +130,7 @@ input RefreshTokenInput {
 }
 
 type Role {
+  capabilities: [Capability!]!
   id: ID!
   name: String!
 }
