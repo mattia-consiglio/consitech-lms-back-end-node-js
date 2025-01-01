@@ -8,6 +8,7 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { join } from 'node:path';
 import { CoursesModule } from './courses/courses.module';
+import metadata from './metadata';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { CoursesModule } from './courses/courses.module';
 
         return formattedError;
       },
+      metadata,
     }),
     AuthModule,
     UsersModule,

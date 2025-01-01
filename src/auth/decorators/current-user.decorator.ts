@@ -1,4 +1,8 @@
-import { createParamDecorator, ExecutionContext } from '@nestjs/common';
+import {
+  createParamDecorator,
+  ExecutionContext,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { GqlExecutionContext } from '@nestjs/graphql';
 
 export const CurrentUser = createParamDecorator(
@@ -7,7 +11,7 @@ export const CurrentUser = createParamDecorator(
     const user = ctx.getContext().req.user;
 
     if (!user) {
-      throw new Error('User not found in request');
+      throw new UnauthorizedException('Authentication required');
     }
 
     return user;

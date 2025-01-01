@@ -5,6 +5,10 @@ import { Capability } from 'src/capabilities/models/capability.model';
 export class Role {
   @Field(() => ID)
   id: number;
+
+  @Field(() => String)
   name: string;
+
+  @Field(() => [Capability])
   capabilities: Capability[];
 }

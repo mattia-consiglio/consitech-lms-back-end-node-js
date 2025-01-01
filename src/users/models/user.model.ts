@@ -10,14 +10,31 @@ registerEnumType(Provider, {
 export class User {
   @Field(() => ID)
   id: number;
+
+  @Field(() => String)
   email: string;
+
+  @Field(() => String)
   username: string;
+
   @Field(() => Provider, { nullable: true })
   provider?: Provider;
+
+  @Field(() => String, { nullable: true })
   providerId?: string;
+
+  @Field(() => Date, { nullable: true })
   emailVerifiedAt?: Date;
+
+  @Field(() => Number)
   roleId: number;
+
+  @Field(() => Date)
   createdAt: Date;
+
+  @Field(() => Date)
   updatedAt: Date;
+
+  @Field(() => Role)
   role: Role;
 }

@@ -2,14 +2,30 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+type Capability {
+  id: ID!
+  name: String!
+}
+
 type ChangeUserOutput {
   message: String!
   user: User
 }
 
 type Course {
+  createdAt: DateTime!
+  description: String
   id: ID!
+  lessons: [LessonSimple!]!
+  order: Float!
   publishStatus: PublishStatus!
+  seoId: Float
+  slug: String!
+  teacher: UserSimple!
+  teacherId: ID!
+  thumbnail: String
+  title: String!
+  updatedAt: DateTime!
 }
 
 input CreateCourseInput {
@@ -47,6 +63,29 @@ input CreateUserInputPublic {
   username: String
 }
 
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+type LessonSimple {
+  content: String!
+  courseId: Float!
+  createdAt: DateTime!
+  description: String
+  id: ID!
+  order: Float!
+  publishStatus: PublishStatus!
+  seo: Seo
+  seoId: Float
+  slug: String!
+  teacher: UserSimple!
+  teacherId: Float!
+  thumbnail: String
+  title: String!
+  updatedAt: DateTime!
+}
+
 input LoginInput {
   """Email or username"""
   emailOrUsername: String!
@@ -60,6 +99,7 @@ type LoginResponse {
 }
 
 type Mutation {
+  """Create a new course"""
   createCourse(createCourseInput: CreateCourseInput!): Course!
 
   """Create a new user account (requires create_users capability)"""
@@ -67,7 +107,12 @@ type Mutation {
     """Input data for creating a new user with specified role"""
     createUserInput: CreateUserInput!
   ): User!
+
+  """Delete a course"""
   deleteCourse(id: Float!): Course!
+
+  """Delete a course that you own"""
+  deleteOwnCourse(id: Float!): Course!
 
   """Delete own user account"""
   deleteOwnUser: ChangeUserOutput!
@@ -87,7 +132,12 @@ type Mutation {
     """Input data for creating a new user account"""
     createUserInput: CreateUserInputPublic!
   ): User!
+
+  """Update a course"""
   updateCourse(id: Float!, updateCourseInput: UpdateCourseInput!): Course!
+
+  """Update a course that you own"""
+  updateOwnCourse(updateCourseInput: UpdateCourseInput!): Course!
 
   """Update own user account"""
   updateOwnUser(updateUserInput: UpdateUserInput!): ChangeUserOutput!
@@ -114,8 +164,17 @@ enum PublishStatus {
 }
 
 type Query {
-  course(id: Float!): Course!
+  """Get a course by id or slug. If both are provided, the id will be used."""
+  course(id: Float, slug: String): Course
+
+  """Get all courses"""
   courses: [Course!]!
+
+  """Get all courses by teacher id"""
+  coursesOwn: [Course!]!
+
+  """Get all published courses"""
+  coursesPublic: [Course!]!
   currentUser: User!
   user(id: Float!): User!
   users: [User!]!
@@ -123,6 +182,19 @@ type Query {
 
 input RefreshTokenInput {
   token: String!
+}
+
+type Role {
+  capabilities: [Capability!]!
+  id: ID!
+  name: String!
+}
+
+type Seo {
+  description: String!
+  id: ID!
+  ldJson: String!
+  title: String!
 }
 
 input UpdateCourseInput {
@@ -143,6 +215,20 @@ input UpdateUserInput {
 }
 
 type User {
+  createdAt: DateTime!
+  email: String!
+  emailVerifiedAt: DateTime
   id: ID!
   provider: Provider
+  providerId: String
+  role: Role!
+  roleId: Float!
+  updatedAt: DateTime!
+  username: String!
+}
+
+type UserSimple {
+  email: String!
+  id: ID!
+  username: String!
 }

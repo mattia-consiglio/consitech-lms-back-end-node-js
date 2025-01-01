@@ -1,14 +1,12 @@
-import { ObjectType, Field, ID, registerEnumType } from '@nestjs/graphql';
+import { ObjectType, Field, ID } from '@nestjs/graphql';
 import { PublishStatus } from '@prisma/client';
-
-registerEnumType(PublishStatus, {
-  name: 'PublishStatus',
-});
+import { Seo } from 'src/seos/models/seo.model';
+import { UserSimple } from 'src/users/models/user-simple.model';
 
 @ObjectType()
-export class Article {
+export class LessonSimple {
   @Field(() => ID)
-  id: string;
+  id: number;
 
   @Field(() => String)
   title: string;
@@ -25,6 +23,15 @@ export class Article {
   @Field(() => String, { nullable: true })
   thumbnail?: string;
 
+  @Field(() => String)
+  content: string;
+
+  @Field(() => Number)
+  courseId: number;
+
+  @Field(() => Number)
+  order: number;
+
   @Field(() => Date)
   createdAt: Date;
 
@@ -32,17 +39,14 @@ export class Article {
   updatedAt: Date;
 
   @Field(() => Number)
-  displayOrder: number;
+  teacherId: number;
 
-  @Field(() => String, { nullable: true })
-  thumbnailImage?: string;
-
-  @Field(() => Number)
-  authorId: number;
+  @Field(() => UserSimple)
+  teacher: UserSimple;
 
   @Field(() => Number, { nullable: true })
   seoId?: number;
 
-  @Field(() => String)
-  content: string;
+  @Field(() => Seo, { nullable: true })
+  seo?: Seo;
 }

@@ -1,4 +1,11 @@
-import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
+import {
+  Args,
+  Mutation,
+  Parent,
+  Query,
+  ResolveField,
+  Resolver,
+} from '@nestjs/graphql';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserInput } from './dto/create-user.input';
 import { UpdateUserInput } from './dto/update-user.input';
@@ -10,6 +17,7 @@ import {
   UseGuards,
   UnauthorizedException,
   HttpException,
+  BadRequestException,
 } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
@@ -19,6 +27,7 @@ import { Public } from 'src/auth/decorators/public.decorator';
 import { CreateUserInputPublic } from './dto/create-user-input-public';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import { ChangeUserOutput } from './dto/change-user-output';
+import { Role } from 'src/role/models/role.model';
 
 dotenv.config();
 
@@ -30,19 +39,16 @@ export class UsersResolver {
   @Query(() => [User])
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('Admin')
-  async users(): Promise<Partial<User>[]> {
-    return this.prisma.user.findMany({
-      include: { role: { include: { capabilities: true } } },
-    });
+  async users() {
+    return this.prisma.user.findMany();
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('Admin')
   @Query(() => User)
-  async user(@Args('id') id: number): Promise<User> {
+  async user(@Args('id') id: number) {
     return this.prisma.user.findUnique({
       where: { id },
-      include: { role: { include: { capabilities: true } } },
     });
   }
 
@@ -61,7 +67,7 @@ export class UsersResolver {
       description: 'Input data for creating a new user account',
     })
     createUserInput: CreateUserInputPublic,
-  ): Promise<User> {
+  ) {
     const hashedPassword = await bcrypt.hash(
       createUserInput.password,
       this.saltRounds,
@@ -73,7 +79,6 @@ export class UsersResolver {
         username: createUserInput.username || createUserInput.email,
         role: { connect: { name: 'Student' } },
       },
-      include: { role: { include: { capabilities: true } } },
     });
   }
 
@@ -87,7 +92,7 @@ export class UsersResolver {
       description: 'Input data for creating a new user with specified role',
     })
     createUserInput: CreateUserInput,
-  ): Promise<User> {
+  ) {
     const hashedPassword = await bcrypt.hash(
       createUserInput.password,
       this.saltRounds,
@@ -99,7 +104,6 @@ export class UsersResolver {
         username: createUserInput.username || createUserInput.email,
         role: { connect: { name: createUserInput.roleName || 'Student' } },
       },
-      include: { role: { include: { capabilities: true } } },
     });
   }
 
@@ -112,7 +116,7 @@ export class UsersResolver {
     @Args('id', { description: 'ID of the user to update' }) id: number,
     @Args('updateUserInput', { description: 'New user data' })
     updateUserInput: UpdateUserInput,
-  ): Promise<ChangeUserOutput> {
+  ) {
     const data = { ...updateUserInput };
     if (updateUserInput.password) {
       data.password = await bcrypt.hash(
@@ -123,7 +127,6 @@ export class UsersResolver {
     const user = await this.prisma.user.update({
       where: { id },
       data,
-      include: { role: { include: { capabilities: true } } },
     });
     return {
       message: 'User updated successfully',
@@ -138,10 +141,9 @@ export class UsersResolver {
   })
   async deleteUser(
     @Args('id', { description: 'ID of the user to delete' }) id: number,
-  ): Promise<ChangeUserOutput> {
+  ) {
     const user = await this.prisma.user.delete({
       where: { id },
-      include: { role: { include: { capabilities: true } } },
     });
     return {
       message: 'User deleted successfully',
@@ -154,7 +156,7 @@ export class UsersResolver {
   @Mutation(() => ChangeUserOutput, {
     description: 'Delete own user account',
   })
-  async deleteOwnUser(@CurrentUser() user: User): Promise<ChangeUserOutput> {
+  async deleteOwnUser(@CurrentUser() user: User) {
     if (!user) {
       throw new UnauthorizedException('Authentication required');
     }
@@ -177,18 +179,22 @@ export class UsersResolver {
   async updateOwnUser(
     @Args('updateUserInput') updateUserInput: UpdateUserInput,
     @CurrentUser() user: User,
-  ): Promise<ChangeUserOutput> {
-    if (!user) {
-      throw new UnauthorizedException('Authentication required');
-    }
-
+  ) {
     try {
       return await this.updateUser(user.id, updateUserInput);
     } catch (error) {
       if (error instanceof HttpException) {
         throw error;
       }
-      throw new UnauthorizedException('Unable to update user');
+      throw new BadRequestException('Unable to update user');
     }
+  }
+
+  @ResolveField(() => Role)
+  async role(@Parent() user: User) {
+    return this.prisma.user.findUnique({
+      where: { id: user.id },
+      include: { role: { include: { capabilities: true } } },
+    });
   }
 }

@@ -1,28 +1,5 @@
 import { PrismaClient, Prisma } from '@prisma/client';
 
-const prisma = new PrismaClient();
-
-/**
- * Converts a string to a URL-friendly slug
- * @param text - The text to convert to a slug
- * @returns The slugified text
- *
- * @example
- * toSlug('Hello World!') // 'hello-world'
- * toSlug('Perché è così?') // 'perche-e-cosi'
- * toSlug('  Multiple   Spaces  ') // 'multiple-spaces'
- */
-export function toSlug(text: string): string {
-  return text
-    .normalize('NFKD') // Normalizza i caratteri decomponendoli
-    .toLowerCase() // Converte in minuscolo
-    .trim() // Rimuove spazi all'inizio e alla fine
-    .replace(/\s+/g, ' ') // Rimuove spazi multipli
-    .replace(/[^\w\s-]/g, '') // Rimuove caratteri speciali
-    .replace(/[\s_]/g, '-') // Sostituisce spazi e underscore con trattini
-    .replace(/-+/g, '-'); // Rimuove trattini multipli
-}
-
 export enum ContentType {
   COURSE = 'course',
   LESSON = 'lesson',
@@ -40,6 +17,45 @@ type PrismaModel = {
   ) => Promise<{ slug: string } | null>;
 };
 
+const prisma = new PrismaClient();
+
+/**
+ * Converts a string to a URL-friendly slug
+ * @param text - The text to convert to a slug
+ * @returns The slugified text
+ *
+ * @example
+ * toSlug('Hello World!') // 'hello-world'
+ * toSlug('Perché è così?') // 'perche-e-cosi'
+ * toSlug('  Multiple   Spaces  ') // 'multiple-spaces'
+ */
+export function toSlug(text: string): string {
+  return text
+    .normalize('NFKD') // Normalize characters by decomposing them
+    .toLowerCase() // Convert to lowercase
+    .trim() // Remove spaces at start and end
+    .replace(/\s+/g, ' ') // Remove multiple spaces
+    .replace(/[^\w\s]/g, '') // Remove special characters
+    .replace(/[\s_]/g, '-') // Replace spaces and underscores with hyphens
+    .replace(/-+/g, '-'); // Remove multiple hyphens
+}
+
+/**
+ * Generates a unique slug for a specific content
+ * @param title - The title to convert to slug
+ * @param contentType - The type of content (course, lesson or article)
+ * @param id - Optional ID of existing content (to exclude from uniqueness check)
+ * @returns A unique slug based on the title
+ *
+ * @example
+ * // For a new course
+ * generateUniqueSlug('My Course', ContentType.COURSE)
+ * // 'my-course'
+ *
+ * // If similar slug exists
+ * generateUniqueSlug('My Course', ContentType.COURSE)
+ * // 'my-course-1'
+ */
 export async function generateUniqueSlug(
   title: string,
   contentType: ContentType,
