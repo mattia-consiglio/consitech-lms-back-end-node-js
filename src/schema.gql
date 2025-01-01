@@ -2,28 +2,24 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
-type Capability {
-  id: ID!
-  name: String!
-}
-
 type ChangeUserOutput {
   message: String!
   user: User
 }
 
 type Course {
-  createdAt: DateTime!
-  description: String
   id: ID!
-  order: Float!
   publishStatus: PublishStatus!
-  seoId: Float
-  slug: String!
-  teacherId: Float!
+}
+
+input CreateCourseInput {
+  description: String
+  order: Float!
+  publishStatus: PublishStatus
+  slug: String
+  teacherId: Float
   thumbnail: String
   title: String!
-  updatedAt: DateTime!
 }
 
 input CreateUserInput {
@@ -51,11 +47,6 @@ input CreateUserInputPublic {
   username: String
 }
 
-"""
-A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
-"""
-scalar DateTime
-
 input LoginInput {
   """Email or username"""
   emailOrUsername: String!
@@ -69,11 +60,14 @@ type LoginResponse {
 }
 
 type Mutation {
+  createCourse(createCourseInput: CreateCourseInput!): Course!
+
   """Create a new user account (requires create_users capability)"""
   createUser(
     """Input data for creating a new user with specified role"""
     createUserInput: CreateUserInput!
   ): User!
+  deleteCourse(id: Float!): Course!
 
   """Delete own user account"""
   deleteOwnUser: ChangeUserOutput!
@@ -93,6 +87,7 @@ type Mutation {
     """Input data for creating a new user account"""
     createUserInput: CreateUserInputPublic!
   ): User!
+  updateCourse(id: Float!, updateCourseInput: UpdateCourseInput!): Course!
 
   """Update own user account"""
   updateOwnUser(updateUserInput: UpdateUserInput!): ChangeUserOutput!
@@ -119,6 +114,7 @@ enum PublishStatus {
 }
 
 type Query {
+  course(id: Float!): Course!
   courses: [Course!]!
   currentUser: User!
   user(id: Float!): User!
@@ -129,10 +125,14 @@ input RefreshTokenInput {
   token: String!
 }
 
-type Role {
-  capabilities: [Capability!]!
-  id: ID!
-  name: String!
+input UpdateCourseInput {
+  description: String
+  order: Float
+  publishStatus: PublishStatus
+  slug: String
+  teacherId: Float
+  thumbnail: String
+  title: String
 }
 
 input UpdateUserInput {
@@ -143,14 +143,6 @@ input UpdateUserInput {
 }
 
 type User {
-  createdAt: DateTime!
-  email: String!
-  emailVerifiedAt: DateTime
   id: ID!
   provider: Provider
-  providerId: String
-  role: Role!
-  roleId: Float!
-  updatedAt: DateTime!
-  username: String!
 }

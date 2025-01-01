@@ -1,5 +1,7 @@
 import { ObjectType, Field, ID, registerEnumType } from '@nestjs/graphql';
 import { PublishStatus } from '@prisma/client';
+import { User } from 'src/users/models/user.model';
+import { Lesson } from 'src/lessons/models/lesson.model';
 
 registerEnumType(PublishStatus, {
   name: 'PublishStatus',
@@ -20,4 +22,6 @@ export class Course {
   updatedAt: Date;
   seoId?: number;
   teacherId: number;
+  lessons: Lesson[];
+  teacher: User;
 }
